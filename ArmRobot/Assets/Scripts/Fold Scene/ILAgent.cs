@@ -41,50 +41,137 @@ public class ILAgent : Agent
         }
     }
 
+        // //full obs state: cube positions xyz * 3, gripper position, finger length
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        sensor.AddObservation(agent.transform.position.x);
+        sensor.AddObservation(agent.transform.position.y);
+        sensor.AddObservation(agent.transform.position.z);
+        ObiSolver solver = cloth.solver;
+        float[] obs = new float[solver.positions.count];
+        for(int i = 0; i < solver.positions.count; i++)
+        {
+            Vector4 vertexLocalPosition = solver.positions[i];
+            Vector3 vertexGlobalPosition = solver.transform.TransformPoint(vertexLocalPosition);
+            sensor.AddObservation(vertexGlobalPosition.x);
+            sensor.AddObservation(vertexGlobalPosition.y);
+            sensor.AddObservation(vertexGlobalPosition.z);
+        }     
+    }
 
-    // //full obs state: cube positions xyz * 3, gripper position, finger length
-    // public override void CollectObservations(VectorSensor sensor)
+
+    // public override void OnActionReceived(ActionBuffers actionBuffers)
     // {
-    //     sensor.AddObservation(agent.transform.position.x);
-    //     sensor.AddObservation(agent.transform.position.y);
-    //     sensor.AddObservation(agent.transform.position.z);
-    //     ObiSolver solver = cloth.solver;
-    //     float[] obs = new float[solver.positions.count];
-    //     for(int i = 0; i < solver.positions.count; i++)
+    //     var X_displace = speed * Mathf.Clamp(actionBuffers.ContinuousActions[0], -1f, 1f);
+    //     var Y_displace = speed * Mathf.Clamp(actionBuffers.ContinuousActions[2], -1f, 1f);
+    //     var Z_displace = speed * Mathf.Clamp(actionBuffers.ContinuousActions[1], -1f, 1f);
+    //     var grab = Mathf.Clamp(actionBuffers.ContinuousActions[3], -1f, 1f);
+
+    //     if(grab <= -0.5f)
     //     {
-    //         Vector4 vertexLocalPosition = solver.positions[i];
-    //         Vector3 vertexGlobalPosition = solver.transform.TransformPoint(vertexLocalPosition);
-    //         sensor.AddObservation(vertexGlobalPosition.x);
-    //         sensor.AddObservation(vertexGlobalPosition.y);
-    //         sensor.AddObservation(vertexGlobalPosition.z);
-    //     }     
+    //         agent.SendMessage("Grab");
+    //     }
+    //     else if(grab >= 0.5f)
+    //     {
+    //         agent.SendMessage("Release");
+    //     }
+
+    //     var pos = agent.transform.position;
+    //     pos.x += X_displace;
+    //     pos.y += Y_displace;
+    //     pos.z += Z_displace;
+
+    //     agent.transform.position = pos;
+
+    //     var bounds = 1.5f;
+    //     if(pos.x < -bounds || pos.x > bounds)
+    //     {
+    //         AddReward(-100);
+    //         EndEpisode();
+    //     }
+    //     if(pos.y < 0.0 || pos.y > bounds)
+    //     {
+    //         AddReward(-100);
+    //         EndEpisode();
+    //     }
+    //     if(pos.z < -bounds || pos.z > bounds)
+    //     {
+    //         AddReward(-100);
+    //         EndEpisode();
+    //     }
+    //     //a dummy reward could be the distance between the corner vertex pairs: 2,960 468,593 or [0],[3] [1],[2]
+    //     Vector3[] positions = new Vector3[4];
+    //     int i = 0;
+    //     foreach(var index in corners)
+    //     {
+    //         ObiSolver solver = cloth.solver;
+    //         Vector4 position = solver.positions[index];
+    //         positions[i] = solver.transform.TransformPoint(position);
+    //         i += 1;
+    //     }
+    //     //match pairs
+    //     var pair1_dist = Vector3.Distance(positions[0], positions[3]);
+    //     var pair2_dist = Vector3.Distance(positions[1], positions[2]);
+    //     var reward = (2.5f - (pair1_dist + pair2_dist))/100f;
+    //     AddReward(reward);
+    //     // Debug.Log(reward);
+    //     if(reward > 0.021f)
+    //     {
+    //         AddReward(10f);
+    //         EndEpisode();
+    //     }
+    //     timesteps += 1;
+    //     if(timesteps > 5000)
+    //     {
+    //         EndEpisode();
+    //     }
     // }
+
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        var X_displace = speed * Mathf.Clamp(actionBuffers.ContinuousActions[0], -1f, 1f);
-        var Y_displace = speed * Mathf.Clamp(actionBuffers.ContinuousActions[2], -1f, 1f);
-        var Z_displace = speed * Mathf.Clamp(actionBuffers.ContinuousActions[1], -1f, 1f);
-        var grab = Mathf.Clamp(actionBuffers.ContinuousActions[3], -1f, 1f);
+        int x_movement = actionBuffers.DiscreteActions[0];
+        int y_movement = actionBuffers.DiscreteActions[2];
+        int z_movement = actionBuffers.DiscreteActions[1];
+        // Get the action index for jumping
+        int gripper_action = actionBuffers.DiscreteActions[3];
 
-        if(grab <= -0.5f)
-        {
-            // Debug.Log("Grab");
-            agent.SendMessage("Grab");
-        }
-        else if(grab >= 0.5f)
-        {
-            // Debug.Log("Release");
-            agent.SendMessage("Release");
-        }
+        int directionX = 0, directionY = 0, directionZ = 0;
 
+        // Look up the index in the movement action list:
+        if (x_movement == 0) { directionX = -1; }
+        if (x_movement == 1) { directionX = 0; }
+        if (x_movement == 2) { directionX = 1; }
+        if (y_movement == 0) { directionY = -1; }
+        if (y_movement == 1) { directionY = 0; }
+        if (y_movement == 2) { directionY = 1; }
+        if (z_movement == 0) { directionZ = -1; }
+        if (z_movement == 1) { directionZ = 0; }
+        if (z_movement == 2) { directionZ = 1; }
+        
         var pos = agent.transform.position;
-        pos.x += X_displace;
-        pos.y += Y_displace;
-        pos.z += Z_displace;
+        pos.x += speed * directionX;
+        pos.y += speed * directionY;
+        pos.z += speed * directionZ;
 
         agent.transform.position = pos;
 
+        //Grab or dont grab
+        if(gripper_action == 0)
+        {
+            agent.SendMessage("Grab");
+        }
+        else if(gripper_action == 2)
+        {
+            agent.SendMessage("Release");
+        }
+
+        CalculateReward();
+    }
+
+    public void CalculateReward()
+    {
+        var pos = agent.transform.position;
         var bounds = 1.5f;
         if(pos.x < -bounds || pos.x > bounds)
         {
@@ -101,13 +188,6 @@ public class ILAgent : Agent
             AddReward(-100);
             EndEpisode();
         }
-        // pos.x = Mathf.Max(-bounds, pos.x);
-        // pos.x = Mathf.Min(bounds, pos.x);
-        // pos.y = Mathf.Max(0.1f, pos.y);
-        // pos.y = Mathf.Min(bounds, pos.y);
-        // pos.z = Mathf.Max(-bounds, pos.z);
-        // pos.z = Mathf.Min(bounds, pos.z);
-
         //a dummy reward could be the distance between the corner vertex pairs: 2,960 468,593 or [0],[3] [1],[2]
         Vector3[] positions = new Vector3[4];
         int i = 0;
@@ -126,6 +206,7 @@ public class ILAgent : Agent
         // Debug.Log(reward);
         if(reward > 0.021f)
         {
+            AddReward(10f);
             EndEpisode();
         }
         timesteps += 1;
@@ -135,10 +216,35 @@ public class ILAgent : Agent
         }
     }
 
-    // public void StartRequesting()
-    // {
-    //     request = true;
-    // }
+    public override void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
+    {
+        var pos = agent.transform.position;
+        var bounds = 1.5f
+        if(pos.x < -bounds)
+        {
+            actionMask.SetActionEnabled(0, 0, false);
+        }
+        if(pos.x > bounds)
+        {
+            actionMask.SetActionEnabled(0, 2, false);
+        }
+        if(pos.y < 0.0f)
+        {
+            actionMask.SetActionEnabled(2, 0, false);
+        }
+        if(pos.y > bounds)
+        {
+            actionMask.SetActionEnabled(2, 2, false);
+        }
+        if(pos.z < -bounds)
+        {
+            actionMask.SetActionEnabled(1, 0, false);
+        }
+        if(pos.z > bounds)
+        {
+            actionMask.SetActionEnabled(1, 2, false);
+        }
+    }
 
     public override void OnEpisodeBegin()
     {
@@ -162,11 +268,32 @@ public class ILAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        var continuousActionsOut = actionsOut.ContinuousActions;
-        continuousActionsOut[0] = Input.GetAxis("BigHandHorizontal");
-        continuousActionsOut[1] = Input.GetAxis("BigHandForward");
-        continuousActionsOut[2] = Input.GetAxis("BigHandVertical");
-        continuousActionsOut[3] = Input.GetAxis("Fingers");
+        // var continuousActionsOut = actionsOut.ContinuousActions;
+        // continuousActionsOut[0] = Input.GetAxis("BigHandHorizontal");
+        // continuousActionsOut[1] = Input.GetAxis("BigHandForward");
+        // continuousActionsOut[2] = Input.GetAxis("BigHandVertical");
+        // continuousActionsOut[3] = Input.GetAxis("Fingers");
+
+        //x movement
+        var discreteActionsOut = actionsOut.DiscreteActions;
+        if(Input.GetKey("a")){ discreteActionsOut[0] = 0; }
+        else if(Input.GetKey("d")){ discreteActionsOut[0] = 2;}
+        else{ discreteActionsOut[0] = 1;}
+        
+        //z movement
+        if(Input.GetKey("w")){ discreteActionsOut[1] = 0; }
+        else if(Input.GetKey("s")){ discreteActionsOut[1] = 2;}
+        else{ discreteActionsOut[1] = 1;}
+
+        //y movement
+        if(Input.GetKey("q")){ discreteActionsOut[2] = 0; }
+        else if(Input.GetKey("e")){ discreteActionsOut[2] = 2;}
+        else{ discreteActionsOut[2] = 1;}
+
+        //grippers
+        if(Input.GetKey("z")){ discreteActionsOut[3] = 0; }
+        else if(Input.GetKey("x")){ discreteActionsOut[3] = 2;}
+        else{ discreteActionsOut[3] = 1;}
     }
 
     public static bool NearlyEqual(float a, float b, float epsilon=1e-3f) 
@@ -179,12 +306,6 @@ public class ILAgent : Agent
         { // shortcut, handles infinities
             return true;
         } 
-        // else if (a == 0 || b == 0 || absA + absB < Float.MIN_NORMAL)
-        // {
-        //     // a or b is zero or both are extremely close to it
-        //     // relative error is less meaningful here
-        //     return diff < (epsilon * Float.MIN_NORMAL);
-        // }
         else 
         { // use relative error
             return diff / (absA + absB) < epsilon;
