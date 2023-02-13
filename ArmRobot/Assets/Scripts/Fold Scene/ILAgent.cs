@@ -176,16 +176,19 @@ public class ILAgent : Agent
         if(pos.x < -bounds || pos.x > bounds)
         {
             AddReward(-100);
+            Debug.Log("FAIL");
             EndEpisode();
         }
         if(pos.y < 0.0 || pos.y > bounds)
         {
             AddReward(-100);
+            Debug.Log("FAIL");
             EndEpisode();
         }
         if(pos.z < -bounds || pos.z > bounds)
         {
             AddReward(-100);
+            Debug.Log("FAIL");
             EndEpisode();
         }
         //a dummy reward could be the distance between the corner vertex pairs: 2,960 468,593 or [0],[3] [1],[2]
@@ -199,13 +202,14 @@ public class ILAgent : Agent
             i += 1;
         }
         //match pairs
-        var pair1_dist = Vector3.Distance(positions[0], positions[3]);
-        var pair2_dist = Vector3.Distance(positions[1], positions[2]);
-        var reward = (2.5f - (pair1_dist + pair2_dist))/100f;
+        var pair1_dist = Vector3.Distance(positions[0], positions[2]);
+        var pair2_dist = Vector3.Distance(positions[1], positions[3]);
+        var reward = (5f - (pair1_dist + pair2_dist))/100f;
         AddReward(reward);
         // Debug.Log(reward);
-        if(reward > 0.021f)
+        if(reward > 0.042f)
         {
+            Debug.Log("success" + reward);
             AddReward(10f);
             EndEpisode();
         }
@@ -219,7 +223,7 @@ public class ILAgent : Agent
     public override void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
     {
         var pos = agent.transform.position;
-        var bounds = 1.5f
+        var bounds = 1.5f;
         if(pos.x < -bounds)
         {
             actionMask.SetActionEnabled(0, 0, false);
@@ -281,8 +285,8 @@ public class ILAgent : Agent
         else{ discreteActionsOut[0] = 1;}
         
         //z movement
-        if(Input.GetKey("w")){ discreteActionsOut[1] = 0; }
-        else if(Input.GetKey("s")){ discreteActionsOut[1] = 2;}
+        if(Input.GetKey("s")){ discreteActionsOut[1] = 0; }
+        else if(Input.GetKey("w")){ discreteActionsOut[1] = 2;}
         else{ discreteActionsOut[1] = 1;}
 
         //y movement
