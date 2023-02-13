@@ -108,43 +108,6 @@ namespace Obi
                 GrabFirstPoint();
                //add sphere to second point
             }
-            else
-            {
-                if(point_grabbed)
-                {
-                    // ArticulationBody articulation = hand.GetComponent<ArticulationBody>();
-                    // var anchor_rot = articulation.parentAnchorRotation;
-                    // var target_rot = Quaternion.Euler(0, 270+rotations*60, 270);
-                    // var target_met = anchor_rot == target_rot;
-                    // if(target_met)
-                    // {
-                    //     rotations++;
-                    //     Debug.Log(rotations);
-                    //     if(capture_data)
-                    //     {
-                    //         filename = date + rotations;
-                    //         Capture();
-                    //         WriteData();
-                    //         Debug.Log("image captured");
-                    //     }
-                    // }
-
-                    // if(rotations == 6)
-                    // {
-                    //     rotations = 0;
-                    //     Application.LoadLevel(0);
-                    //     return;
-                    // }       
-
-                    // //rotate arm
-                    // var step = 10f * Time.deltaTime;
-                    // anchor_rot = Quaternion.RotateTowards(anchor_rot, target_rot, step);
-        
-                    // articulation.parentAnchorRotation = anchor_rot;             
-                   // Debug.Log("reset");
-                    // GrabSecondPoint();
-                }
-            }
             positionSphere.transform.position = calculateIndexPosition(second_target_index);
             //GetVerticesObs();
         }
@@ -158,7 +121,7 @@ namespace Obi
         void GrabFirstPoint()
         {
             Vector3 displacement = gripper_target - gripper.transform.position;
-            //displacement.y +=y_offset;
+
             var actionX = speed * Mathf.Clamp(displacement.x, -2f, 2f);
             var actionY = speed * Mathf.Clamp(displacement.y , -1f, 1f);
             var actionZ = speed * Mathf.Clamp(displacement.z, -2f, 2f);
@@ -220,8 +183,7 @@ namespace Obi
             Vector3 pickPosition = solver.transform.TransformPoint(position);
 
             //find desired coords for new point by adding 2.0f to X and Z then find closest vertex            
-            var cloth_size = 2.0f;//2.0f;
-            //Vector3 desired_coord = new Vector3(pickPosition.x + cloth_size, pickPosition.y, pickPosition.z);
+            var cloth_size = 2.0f;
             Vector3[] desired_coords = new Vector3[2];
             desired_coords[0] = new Vector3(pickPosition.x + cloth_size, pickPosition.y, pickPosition.z);
             desired_coords[1] = new Vector3(pickPosition.x - cloth_size, pickPosition.y, pickPosition.z);
@@ -245,40 +207,6 @@ namespace Obi
             positionSphere.transform.position = second_target;
         }
 
-        // void CalculateSecondPick(int pickIndex)
-        // {
-        //     ObiSolver solver = picker.solver;
-        //     Vector4 position = solver.positions[pickIndex];
-        //     Vector3 pickPosition = solver.transform.TransformPoint(position);
-
-        //     //find desired coords for new point by adding 2.0f to X and Z then find closest vertex            
-        //     var cloth_size = 2.0f;//2.0f;
-        //     //Vector3 desired_coord = new Vector3(pickPosition.x + cloth_size, pickPosition.y, pickPosition.z);
-        //     Vector3[] desired_coords = new Vector3[4];
-        //     desired_coords[0] = new Vector3(pickPosition.x + cloth_size, pickPosition.y, pickPosition.z);
-        //     desired_coords[1] = new Vector3(pickPosition.x - cloth_size, pickPosition.y, pickPosition.z);
-        //     desired_coords[2] = new Vector3(pickPosition.x, pickPosition.y, pickPosition.z + cloth_size);
-        //     desired_coords[3] = new Vector3(pickPosition.x, pickPosition.y, pickPosition.z - cloth_size);
-        //     var closest_dist = 1000f;
-        //     for(int i = 0; i < solver.positions.count; i++)
-        //     {
-        //         Vector4 secondLocalPosition = solver.positions[i];
-        //         Vector3 secondPickPosition = solver.transform.TransformPoint(secondLocalPosition);
-        //         foreach(Vector3 point in desired_coords)
-        //         {
-        //             var dist = Vector3.Distance(secondPickPosition, point);
-        //             if(dist < closest_dist)
-        //             {
-        //                 second_target = secondPickPosition;
-        //                 second_target_index = i;
-        //                 closest_dist = dist;
-        //             }
-        //         }
-        //     }
-        //     Debug.Log(second_target_index);
-        //     positionSphere.transform.position = second_target;
-        // }
-
         Vector3 calculateIndexPosition(int index)
         {
             ObiSolver solver = picker.solver;
@@ -300,31 +228,15 @@ namespace Obi
         void RayCastFromCamera(Vector3 coords)
         {
             RaycastHit hit;
-            Debug.Log(coords);
             Vector2 screen_position = new Vector2(coords.x, coords.y);
             Ray ray = cam.ScreenPointToRay(screen_position);
-            // ObiSolver solver = picker.solver;
-            // if(solver.Raycast(ray, out hit))
-            // {
-            //     Transform objectHit = hit
-            // }
+
             if(Physics.Raycast(ray, out hit))
             {
                 Transform objectHit = hit.transform;
                 Debug.Log(objectHit.gameObject.name);
                 Debug.DrawLine (ray.origin, hit.point,Color.red);
             }
-            
-            // RaycastHit hit;
-            // Vector2 screen_position = new Vector2(coords.x, coords.y);
-            // Ray ray = cam.ScreenPointToRay(screen_position);
-            
-            // if (Physics.Raycast(ray, out hit)) 
-            // {
-            //     Transform objectHit = hit.transform;
-            //     GameObject object = objectHit.gameObject;
-            //     Debug.Log(object.name);
-            // }
         }
 
         void Picker_OnParticleDragged(ObiParticlePicker.ParticlePickEventArgs e)
