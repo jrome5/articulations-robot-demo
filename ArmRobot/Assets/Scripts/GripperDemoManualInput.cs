@@ -9,10 +9,15 @@ public class GripperDemoManualInput : MonoBehaviour
 
     void Update()
     {
-        float input = Input.GetAxis("BigHandVertical");
-        BigHandState moveState = MoveStateForInput(input);
+        float inputX = Input.GetAxis("BigHandVertical");
+        BigHandState moveStateX = MoveStateForInput(inputX);
         GripperDemoController controller = hand.GetComponent<GripperDemoController>();
-        controller.moveState = moveState;
+        controller.moveStateX = moveStateX;
+
+        float inputZ = Input.GetAxis("BigHandHorizontal");
+        BigHandState moveStateZ = MoveStateForInput(inputZ);
+        controller.moveStateZ = moveStateZ;
+
     }
 
     BigHandState MoveStateForInput(float input)

@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Base01
+  - Collider
+  - Cloth
+  - solver
   layers:
   - Default
   - TransparentFX
@@ -16,8 +19,8 @@ TagManager:
   - 
   - Base
   - Base01
-  - 
-  - 
+  - Cloth
+  - Goal
   - 
   - 
   - 
